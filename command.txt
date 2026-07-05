@@ -1,0 +1,22 @@
+C:\Pavani\AI\AAMAD-main\AgenticArchitect\multiagentchat> py -3.13 -m uvicorn multiagentchat.api.app:app --port 8000
+
+C:\Pavani\AI\AAMAD-main\AgenticArchitect\frontend> npm run dev
+
+------------Playwright starts------------
+cd frontend
+npx playwright install chromium   # first time only
+npm run test:e2e:smoke
+npm run test:e2e:integration 
+------------Playwright ends------------
+
+------------QA Test start------------
+cd multiagentchat
+py -3.13 scripts/qa_run_tests.py
+------------QA Test ends------------
+
+
+-----Observablity start-----------
+Restart the API (so new metric names take effect): py -3.13 -m uvicorn multiagentchat.api.app:app --port 8000
+Query Prometheus at http://localhost:9090:
+Open Grafana at http://localhost:3001 (admin/admin) → MultiAgentChat Metrics dashboard
+-----Observablity end-----------

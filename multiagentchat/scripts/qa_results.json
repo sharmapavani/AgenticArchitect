@@ -1,0 +1,287 @@
+{
+  "results": [
+    {
+      "tc_id": "API-01",
+      "scenario": "GET /health",
+      "expected": "200 status=ok",
+      "actual": "{\"status\": \"ok\", \"service\": \"multiagentchat\"}",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "API-02",
+      "scenario": "POST /chat empty message",
+      "expected": "422",
+      "actual": "HTTP 422",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "API-03",
+      "scenario": "Scope refusal weather",
+      "expected": "in_scope=false, no citations, fast",
+      "actual": "HTTP 200, in_scope=False, citations=0, 11.4s",
+      "status": "PASS",
+      "evidence": "4b61e251-24af-4f0c-aa9e-8a0a21fbe6db"
+    },
+    {
+      "tc_id": "AGT-01",
+      "scenario": "scope_classifier weather",
+      "expected": "refusal before crew",
+      "actual": "in_scope=False",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "API-04",
+      "scenario": "Political query",
+      "expected": "in_scope=false",
+      "actual": "HTTP 200, in_scope=False, reason=off_topic_or_political",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "AGT-11",
+      "scenario": "Political guardrail",
+      "expected": "no generative CAI answer",
+      "actual": "answer_len=307",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "API-10",
+      "scenario": "Session greeting",
+      "expected": "greeting_included=true",
+      "actual": "timed out",
+      "status": "FAIL",
+      "evidence": ""
+    },
+    {
+      "tc_id": "API-12",
+      "scenario": "SSE out-of-scope",
+      "expected": "crew skipped",
+      "actual": "events=['run_started', 'flow_step', 'pipeline', 'result'], agent_tasks=0, 3.9s",
+      "status": "PASS",
+      "evidence": "9a533e55-df13-40f0-a757-0fa0bacdde14"
+    },
+    {
+      "tc_id": "API-05",
+      "scenario": "How do I reactivate a deactivated user a",
+      "expected": "intent=user_management, citations",
+      "actual": "intent=user_management, citations=5, 156s",
+      "status": "PASS",
+      "evidence": "eb33893a-89b4-483f-9a43-5c19b3339098"
+    },
+    {
+      "tc_id": "AGT-02",
+      "scenario": "triage_agent",
+      "expected": "intent+portal",
+      "actual": "intent=user_management, portal=facilities",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "AGT-03",
+      "scenario": "facility RAG",
+      "expected": "citations",
+      "actual": "citations=5",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "AGT-04",
+      "scenario": "insurer_validate",
+      "expected": "task in SSE",
+      "actual": "tasks=['triage_task', 'triage_task', 'retrieve_task', 'retrieve_task', 'insurer_validate_task', 'insurer_validate_task', 'training_task', 'training_task', 'respond_task', 'respond_task', 'sentiment_task', 'sentiment_task']",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "AGT-05",
+      "scenario": "training_guide",
+      "expected": "step content",
+      "actual": "steps_hint=True",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "AGT-06",
+      "scenario": "response_agent",
+      "expected": "answer+citations+workflow",
+      "actual": "tone=True, wf=True",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "AGT-07",
+      "scenario": "sentiment",
+      "expected": "escalate flag",
+      "actual": "escalate=True",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "API-11",
+      "scenario": "SSE in-scope",
+      "expected": "run_started\u2192result",
+      "actual": "events=23, 156s",
+      "status": "PASS",
+      "evidence": "eb33893a-89b4-483f-9a43-5c19b3339098"
+    },
+    {
+      "tc_id": "API-13",
+      "scenario": "Audit by run_id",
+      "expected": "row exists",
+      "actual": "{\"run_id\": \"eb33893a-89b4-483f-9a43-5c19b3339098\", \"session_id\": \"96bfa7e3-b01e-4e77-9738-91f80ad3e3ac\", \"in_scope\": 1, \"intent\": \"user_management\", \"portal\": \"facilities\", \"case_number\": null}",
+      "status": "PASS",
+      "evidence": "eb33893a-89b4-483f-9a43-5c19b3339098"
+    },
+    {
+      "tc_id": "E2E-03",
+      "scenario": "run_id correlation",
+      "expected": "SSE=response=audit",
+      "actual": "run_id=eb33893a..., audit=True",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "API-06",
+      "scenario": "How do I submit an OCF-18 treatment plan",
+      "expected": "workflow_map present",
+      "actual": "workflow=True, intent=ocf_submission, 125s",
+      "status": "PASS",
+      "evidence": "f62da8cb-e3de-4ac6-8501-cd01c192acfb"
+    },
+    {
+      "tc_id": "API-07",
+      "scenario": "What does an adjudication reason code me",
+      "expected": "portal=insurers",
+      "actual": "portal=insurers, intent=ocf_adjudication, 199s",
+      "status": "PASS",
+      "evidence": "f4c6d5ff-901e-493b-a92d-d4759b9239d9"
+    },
+    {
+      "tc_id": "API-08",
+      "scenario": "French query",
+      "expected": "FR answer or translated_from_en",
+      "actual": "translated=False, fr_hint=False, 5s",
+      "status": "PARTIAL",
+      "evidence": "1b4d1398-3ff6-46a3-ae08-1298a11688f2"
+    },
+    {
+      "tc_id": "API-09",
+      "scenario": "portal_hint insurers",
+      "expected": "portal=insurers",
+      "actual": "verified in API-07 stream",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "AGT-12",
+      "scenario": "PII scrubber",
+      "expected": "no health card in answer",
+      "actual": "pii_pattern_found=False",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "AGT-13",
+      "scenario": "Low/zero retrieval safety",
+      "expected": "escalate or no unsourced OCF",
+      "actual": "citations=5, escalate=True",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "UI-01",
+      "scenario": "Frontend /api/health proxy",
+      "expected": "200",
+      "actual": "HTTP 200",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "E2E-01",
+      "scenario": "Scope refusal via frontend proxy",
+      "expected": "200 from proxy",
+      "actual": "health OK",
+      "status": "PASS",
+      "evidence": ""
+    },
+    {
+      "tc_id": "KPI-7",
+      "scenario": "Time-to-answer",
+      "expected": "<15s median",
+      "actual": "median=156s, samples=[156.32149744033813, 125.27870583534241, 198.68048119544983]",
+      "status": "FAIL",
+      "evidence": ""
+    }
+  ],
+  "agent_log": [
+    {
+      "agent": "triage_agent",
+      "status": "started",
+      "duration_s": null
+    },
+    {
+      "agent": "triage_agent",
+      "status": "completed",
+      "duration_s": 4.051192699931562
+    },
+    {
+      "agent": "facility_CAI_knowledge_agent",
+      "status": "started",
+      "duration_s": null
+    },
+    {
+      "agent": "facility_CAI_knowledge_agent",
+      "status": "completed",
+      "duration_s": 35.93155470001511
+    },
+    {
+      "agent": "insurer_CAI_knowledge_agent",
+      "status": "started",
+      "duration_s": null
+    },
+    {
+      "agent": "insurer_CAI_knowledge_agent",
+      "status": "completed",
+      "duration_s": 3.82556770008523
+    },
+    {
+      "agent": "training_guide_agent",
+      "status": "started",
+      "duration_s": null
+    },
+    {
+      "agent": "training_guide_agent",
+      "status": "completed",
+      "duration_s": 17.39594719989691
+    },
+    {
+      "agent": "response_agent",
+      "status": "started",
+      "duration_s": null
+    },
+    {
+      "agent": "response_agent",
+      "status": "completed",
+      "duration_s": 76.90985719999298
+    },
+    {
+      "agent": "sentiment_escalation_agent",
+      "status": "started",
+      "duration_s": null
+    },
+    {
+      "agent": "sentiment_escalation_agent",
+      "status": "completed",
+      "duration_s": 8.162373900064267
+    }
+  ],
+  "crew_durations": [
+    156.32149744033813,
+    125.27870583534241,
+    198.68048119544983
+  ]
+}

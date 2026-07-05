@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "chat-audit": {
+      "command": "multiagentchat/.venv/Scripts/access-audit-mcp.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "CHAT_AUDIT_ENABLED": "1",
+        "CHAT_AUDIT_DB_PATH": "./data/chat_audit.db",
+        "CHAT_AUDIT_AUTO_INIT": "1"
+      }
+    }
+  }
+}

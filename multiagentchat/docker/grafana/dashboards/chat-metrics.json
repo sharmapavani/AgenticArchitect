@@ -1,0 +1,124 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum(chat_runs_total{status=\"success\"}) / sum(chat_runs_total)",
+          "legendFormat": "success rate",
+          "instant": true
+        },
+        {
+          "expr": "sum(increase(chat_runs_total{status=\"success\"}[5m])) / sum(increase(chat_runs_total[5m]))",
+          "legendFormat": "success rate (5m rate)"
+        }
+      ],
+      "title": "Success Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+      "id": 2,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(chat_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(chat_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ],
+      "title": "E2E Request Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum(chat_runs_total{status=\"error\"})",
+          "legendFormat": "errors (total)"
+        },
+        {
+          "expr": "sum(chat_runs_total{status=\"scope_refusal\"})",
+          "legendFormat": "scope refusals (total)"
+        },
+        {
+          "expr": "sum(rate(chat_runs_total{status=\"error\"}[5m]))",
+          "legendFormat": "errors/s"
+        }
+      ],
+      "title": "Error & Scope Refusal Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum(rate(chat_tokens_input_total[5m])) by (scope)",
+          "legendFormat": "input {{scope}}"
+        },
+        {
+          "expr": "sum(rate(chat_tokens_output_total[5m])) by (scope)",
+          "legendFormat": "output {{scope}}"
+        }
+      ],
+      "title": "Token Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "currencyUSD"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum(rate(chat_cost_usd_total[5m]))",
+          "legendFormat": "USD/s"
+        }
+      ],
+      "title": "Estimated Cost Rate (USD)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 16},
+      "id": 6,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(chat_step_duration_seconds_bucket[5m])) by (le, step_name))",
+          "legendFormat": "{{step_name}} p95"
+        }
+      ],
+      "title": "Step Latency p95 by step_name",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["multiagentchat", "observability"],
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timezone": "browser",
+  "title": "MultiAgentChat Metrics",
+  "uid": "mac-chat-metrics",
+  "version": 2
+}

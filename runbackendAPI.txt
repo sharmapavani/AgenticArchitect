@@ -1,0 +1,8 @@
+cd multiagentchat
+python -m venv .venv
+.venv\Scripts\activate
+pip install -e .
+copy .env.example .env    # set OPENAI_API_KEY
+# Add PDFs to knowledge/pdf_fac_data/ and knowledge/pdf_ins_data/
+python scripts/build_kb.py
+uvicorn multiagentchat.api.app:app --reload --port 8000

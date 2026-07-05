@@ -1,0 +1,121 @@
+triage_task:
+  description: >
+    Analyze the user message: "{message}".
+    Portal hint from user: {portal_hint}.
+    Language preference: {language}.
+    Conversation history (last turns): {conversation_history}.
+    Pre-classified scope from the intake gate (authoritative — do NOT call scope_classifier):
+    {preclassified_scope}.
+    Use portal, language, intent, in_scope, and scope_rejection_reason from pre-classified
+    scope unless conversation_history clearly overrides portal or language. Set channel to
+    "chat" and infer urgency (low|medium|high) from message tone and keywords.
+    Output ONLY valid JSON with keys:
+    portal, language, intent, channel, urgency, in_scope, scope_rejection_reason.
+  expected_output: >
+    JSON object: {"portal":"facilities|insurers|pms_vendors","language":"en|fr",
+    "intent":"user_management|ocf_submission|ocf_adjudication|general",
+    "channel":"chat","urgency":"low|medium|high","in_scope":true|false,
+    "scope_rejection_reason":null|"not_CAI_related"|"off_topic_or_political"}
+  agent: triage_agent
+
+retrieve_task:
+  description: >
+    Based on triage output in context, retrieve CAI knowledge for query: "{message}".
+    Use vector_search with the classified portal and intent.
+    Then use citation_formatter on the search results.
+    If retrieval returns zero chunks, set retrieval_score to 0 and chunks to [].
+    Output ONLY valid JSON with keys: chunks, citations, retrieval_score.
+  expected_output: >
+    JSON: {"chunks":[...],"citations":[{"url":"...","title":"..."}],"retrieval_score":0.0-1.0}
+  agent: facility_CAI_knowledge_agent
+  context:
+    - triage_task
+
+training_task:
+  description: >
+    From retrieved chunks in context, extract numbered procedural steps for the user question.
+    Include deep links from citation URLs where available.
+    Output ONLY valid JSON with keys: steps (array of strings), deep_links (array of url strings).
+  expected_output: >
+    JSON: {"steps":["Step 1: ..."],"deep_links":["file://..."]}
+  agent: training_guide_agent
+  context:
+    - retrieve_task
+
+respond_task:
+  description: >
+    Compose a warm, professional answer for: "{message}".
+    Use ONLY retrieved chunks and steps from context. Include citations array.
+    Build workflow_map with workflow, impacted_ocf, portal, role, suggested_next_action.
+    Workflow: (1) draft the full answer text in your reasoning, (2) call pii_scrubber exactly
+    once on that final answer text, (3) call tone_validator exactly once on the scrubbed text,
+    (4) emit JSON — do NOT call pii_scrubber or tone_validator again after step 4.
+    Set answer to the scrubbed text from pii_scrubber and tone_check_passed from tone_validator.
+    Set confidence 0.0-1.0 based on retrieval_score. Set translated_from_en if French requested.
+    If zero chunks retrieved, answer must be the retrieval failure message and confidence=0.
+    Output ONLY valid JSON with keys: answer, citations, workflow_map, confidence,
+    translated_from_en, tone_check_passed.
+  expected_output: >
+    JSON: {"answer":"...","citations":[...],"workflow_map":{...},"confidence":0.85,
+    "translated_from_en":false,"tone_check_passed":true}
+  agent: response_agent
+  context:
+    - triage_task
+    - retrieve_task
+    - training_task
+
+sentiment_task:
+  description: >
+    Evaluate the composed answer and user message "{message}" for sentiment and quality.
+    Set escalate=true if confidence < 0.7 or retrieval_score was 0 or user seems frustrated.
+    Set requires_follow_up=true if escalation needed or retrieval failed.
+    Output ONLY valid JSON: escalate, priority (low|medium|high), requires_follow_up, confidence.
+  expected_output: >
+    JSON: {"escalate":false,"priority":"medium","requires_follow_up":false,"confidence":0.85}
+  agent: sentiment_escalation_agent
+  context:
+    - respond_task
+    - retrieve_task
+
+ticket_task:
+  description: >
+    If requires_follow_up or escalate is true in sentiment context, create a ServiceNow Case
+    using servicenow_case_api with portal, summary, and suggested_resolution from prior tasks.
+    If neither flag is true, output {"case_number":null,"assignment_group":null,"skipped":true}.
+    Output ONLY valid JSON with case_number, assignment_group, skipped.
+  expected_output: >
+    JSON: {"case_number":null,"assignment_group":"...","skipped":false}
+  agent: ticket_agent
+  context:
+    - sentiment_task
+    - respond_task
+    - triage_task
+
+handoff_task:
+  description: >
+    If escalate is true, produce a handoff bundle summarizing session, question, answer attempt,
+    citations, and escalation reason for Support Team support agents.
+    If escalate is false, output {"handoff_bundle":null,"skipped":true}.
+    Output ONLY valid JSON with handoff_bundle (object or null) and skipped.
+  expected_output: >
+    JSON: {"handoff_bundle":{...}|null,"skipped":true|false}
+  agent: handoff_agent
+  context:
+    - sentiment_task
+    - respond_task
+    - ticket_task
+    - triage_task
+
+copilot_task:
+  description: >
+    If handoff_bundle is not null, suggest an internal reply for the Support Team support agent
+    grounded in the same retrieval context. Never auto-send.
+    If skipped, output {"suggested_reply":null,"citations":[],"skipped":true}.
+    Output ONLY valid JSON with suggested_reply, citations, skipped.
+  expected_output: >
+    JSON: {"suggested_reply":"..."|null,"citations":[...],"skipped":true|false}
+  agent: copilot_agent
+  context:
+    - handoff_task
+    - retrieve_task
+    - respond_task
