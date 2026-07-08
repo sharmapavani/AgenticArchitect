@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+e2e/test-results
+e2e/playwright-report
+playwright-report
+test-results
+*.md
