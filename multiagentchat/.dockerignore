@@ -1,0 +1,13 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.chroma
+data
+.env
+*.egg-info
+.git
+.gitignore
+scripts/qa_results.json
+scripts/bench_results.txt
