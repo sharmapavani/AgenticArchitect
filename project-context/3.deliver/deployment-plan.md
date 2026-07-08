@@ -275,6 +275,74 @@ docker compose up -d
 
 ---
 
+## CI/CD Pipeline (GitHub Actions)
+
+Workflow: [`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml)
+
+### Trigger matrix
+
+| Event | Frontend CI | Backend CI | GHCR publish |
+|-------|-------------|------------|--------------|
+| `pull_request` → `main` | If `frontend/**` changed | If `multiagentchat/**` changed | No |
+| `push` → `main` | Always | Always | Yes |
+| `push` tag `v*` | Always | Always | Yes (+ semver tags) |
+
+### CI jobs
+
+| Job | Steps |
+|-----|-------|
+| **frontend** | `npm ci` → `npm run lint` → `npm run build` → Playwright smoke (mocked SSE, no OpenAI key) |
+| **backend** | `pip install -r requirements-docker.txt` → `pip install -e .` → `compileall` → import smoke |
+
+**Excluded from CI:** live crew tests (`qa_run_tests.py`), Playwright integration project (requires backend + OpenAI).
+
+### CD — GHCR image publish
+
+Published on push to `main` and version tags (`v1.2.3`):
+
+| Image | GHCR path |
+|-------|-----------|
+| Backend | `ghcr.io/sharmapavani/agenticarchitect-backend` |
+| Frontend | `ghcr.io/sharmapavani/agenticarchitect-frontend` |
+
+**Tags:** `main`, `sha-<short-sha>`, and on version tags: `v1.2.3`, `v1.2`, `v1`, `latest`.
+
+Post-publish smoke: backend `GET /health`, frontend `GET /api/health` (proxied).
+
+### Repo configuration (required once)
+
+1. **Settings → Actions → General → Workflow permissions:** enable *Read and write permissions* (for `GITHUB_TOKEN` → GHCR).
+2. First successful `main` push creates both GHCR packages under the `sharmapavani` account.
+
+### Deploy from GHCR on a pilot host
+
+Pull published images:
+
+```bash
+docker pull ghcr.io/sharmapavani/agenticarchitect-backend:main
+docker pull ghcr.io/sharmapavani/agenticarchitect-frontend:main
+```
+
+Override `docker-compose.yml` `build:` with `image:` for GHCR-based deploy:
+
+```yaml
+services:
+  backend:
+    image: ghcr.io/sharmapavani/agenticarchitect-backend:main
+    # remove build: section
+  frontend:
+    image: ghcr.io/sharmapavani/agenticarchitect-frontend:main
+    # remove build: section
+```
+
+Then start with existing env/volume config:
+
+```bash
+docker compose up -d
+```
+
+---
+
 ## Status Tracking
 
 | Item | Status | Notes |
@@ -287,6 +355,7 @@ docker compose up -d
 | Startup scripts | Complete | `scripts/docker-start.ps1`, `scripts/docker-start.sh` |
 | .dockerignore files | Complete | Backend + frontend |
 | Smoke validation | Complete | Backend `/health` OK; frontend `/api/health` proxy OK (tested on :3010; :3000 blocked by local dev server) |
+| GitHub Actions CI/CD | Complete | `.github/workflows/ci-cd.yml` — CI on PR/push; GHCR publish on `main`/`v*` |
 
 ---
 
@@ -298,7 +367,7 @@ Per SAD §5.1 and PRD §3.5:
 2. Deploy to Azure Container Apps with Key Vault secrets.
 3. Migrate SQLite audit → PostgreSQL (Azure Canada).
 4. Evaluate ChromaDB vs pgvector vs Azure AI Search for Canada residency.
-5. Add GitHub Actions CI/CD: lint → test → build → deploy.
+5. ~~Add GitHub Actions CI/CD: lint → test → build → deploy.~~ **Done** — CI + GHCR publish; Azure deploy deferred.
 6. Harden CORS (`allow_origins` currently `*` in dev).
 7. Execute OpenAI BAA before production-facing pilot traffic.
 
@@ -316,6 +385,7 @@ Per SAD §5.1 and PRD §3.5:
 - `multiagentchat/docker/docker-compose.observability.yml`
 - `multiagentchat/requirements-docker.txt` — pinned Python deps for Docker builds
 - `multiagentchat/.gitattributes` — LF line endings for shell scripts
+- `.github/workflows/ci-cd.yml` — GitHub Actions CI/CD pipeline
 
 ## Assumptions
 
@@ -331,13 +401,14 @@ Per SAD §5.1 and PRD §3.5:
 | OQ-DEP-1 | Sponsor timeline for Azure Canada migration (SAD §5.1) | Pilot sponsor |
 | OQ-DEP-2 | Migrate SQLite audit → PostgreSQL before production pilot traffic? | @backend.eng |
 | OQ-DEP-3 | Production CORS lockdown — which origins to allow? | @integration.eng |
+| OQ-DEP-4 | Azure Container Apps CD from GHCR (SAD §5.1) | DevOps / pilot sponsor |
 
 ## Audit
 
 | Field | Value |
 |-------|-------|
-| **Timestamp** | 2026-07-07 |
+| **Timestamp** | 2026-07-08 |
 | **Persona** | DevOps / Deliver |
-| **Action** | Docker deployment plan + container configs + smoke validation |
-| **Outputs** | `deployment-plan.md`, Dockerfiles, `docker-compose.yml`, `requirements-docker.txt`, startup scripts |
-| **Validation** | Backend `GET /health` → 200; frontend `GET /api/health` → proxied 200 |
+| **Action** | Docker deployment + GitHub Actions CI/CD (GHCR publish) |
+| **Outputs** | `deployment-plan.md`, Dockerfiles, `docker-compose.yml`, `requirements-docker.txt`, startup scripts, `.github/workflows/ci-cd.yml` |
+| **Validation** | Backend `GET /health` → 200; frontend `GET /api/health` → proxied 200; CI workflow ready for first `main` push |
